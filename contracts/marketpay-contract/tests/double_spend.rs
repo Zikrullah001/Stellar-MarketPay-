@@ -20,7 +20,7 @@ mod tests {
         let id = env.register(MarketPayContract, ());
         let contract = MarketPayContractClient::new(env, &id);
         let admin = Address::generate(env);
-        contract.initialize(&admin, &admin, &String::from_str(&env, "1.0.0"));
+        contract.initialize(&admin, &admin, &String::from_str(env, "1.0.0"));
 
         let client = Address::generate(env);
         let freelancer = Address::generate(env);
@@ -84,7 +84,7 @@ mod tests {
         );
         contract.start_work(&job_id2, &freelancer);
         contract.release_escrow(&job_id2, &client);
-        
+
         let escrow2 = contract.get_escrow(&job_id2);
         assert_eq!(escrow2.status, EscrowStatus::Released);
 

@@ -242,7 +242,12 @@ pub(crate) fn verify_deliverable_hash(env: Env, job_id: String) -> bool {
 }
 
 /// Store the IPFS CID for a freelancer's milestone proof.
-pub(crate) fn update_deliverable_proof_hash(env: Env, job_id: String, freelancer: Address, hash: String) {
+pub(crate) fn update_deliverable_proof_hash(
+    env: Env,
+    job_id: String,
+    freelancer: Address,
+    hash: String,
+) {
     freelancer.require_auth();
     check_not_frozen(&env, &job_id);
 

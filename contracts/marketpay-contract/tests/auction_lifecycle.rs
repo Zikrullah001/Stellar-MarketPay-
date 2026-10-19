@@ -104,6 +104,7 @@ mod tests {
 
         /// Assert every balance still equals this snapshot, labelling the
         /// pipeline step that failed so regressions are easy to localise.
+        #[allow(clippy::too_many_arguments)]
         fn assert_unchanged(
             &self,
             env: &Env,
@@ -147,7 +148,7 @@ mod tests {
         let contract = MarketPayContractClient::new(env, &contract_id);
 
         let admin = Address::generate(env);
-        contract.initialize(&admin, &admin, &String::from_str(&env, "1.0.0"));
+        contract.initialize(&admin, &admin, &String::from_str(env, "1.0.0"));
 
         let token_contract = env.register_stellar_asset_contract_v2(admin.clone());
         let token_id = token_contract.address();

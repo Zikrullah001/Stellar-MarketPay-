@@ -221,6 +221,25 @@ pub struct DisputeBond {
     pub raised_at_ledger: u32,
 }
 
+/// One dispute summary returned by the admin dispute listing.
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct DisputeSummary {
+    pub job_id: String,
+    pub status: EscrowStatus,
+    pub client: Address,
+    pub freelancer: Address,
+    pub bond: Option<i128>,
+}
+
+/// A bounded dispute page. `next_cursor` is the last scanned dispute ID.
+#[contracttype]
+#[derive(Clone, Debug)]
+pub struct DisputePage {
+    pub disputes: Vec<DisputeSummary>,
+    pub next_cursor: Option<u64>,
+}
+
 #[contracttype]
 #[derive(Clone, Debug)]
 pub struct ArbitrationCase {
@@ -330,6 +349,10 @@ pub enum DataKey {
     ExecutionDelaySeconds,
     /// Status an escrow had before it was frozen, restored on unfreeze
     PreFreezeStatus(String),
+    /// Highest sequential dispute ID
+    DisputeCount,
+    /// Job ID for a dispute, keyed by its sequential ID
+    DisputeJob(u64),
 }
 
 pub(crate) const DEFAULT_QUORUM_THRESHOLD_BPS: u32 = 1_000;

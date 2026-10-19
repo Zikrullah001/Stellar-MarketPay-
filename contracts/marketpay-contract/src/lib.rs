@@ -23,6 +23,8 @@
 #![allow(
     clippy::too_many_arguments,
     clippy::manual_range_contains,
+    clippy::needless_borrow,
+    clippy::items_after_test_module,
     unused_variables,
     // soroban-sdk 27 deprecates Events::publish in favour of #[contractevent].
     // Migrating changes the emitted event ABI that the backend indexer parses,
@@ -451,6 +453,11 @@ impl MarketPayContract {
         disputes::get_dispute_bond(env, job_id)
     }
 
+    /// Return a bounded page of dispute summaries. Only the contract admin may call this.
+    pub fn get_all_disputes(env: Env, start_after: Option<u64>, limit: u32) -> types::DisputePage {
+        disputes::get_all_disputes(env, start_after, limit)
+    }
+
     // ─── Milestones ────────────────────────────────────────────────────────
 
     /// Milestone-based partial release.
@@ -617,7 +624,12 @@ impl MarketPayContract {
     }
 
     /// Anchor an IPFS proof CID for the caller's milestone deliverable.
-    pub fn update_deliverable_proof_hash(env: Env, job_id: String, freelancer: Address, hash: String) {
+    pub fn update_deliverable_proof_hash(
+        env: Env,
+        job_id: String,
+        freelancer: Address,
+        hash: String,
+    ) {
         deliverable::update_deliverable_proof_hash(env, job_id, freelancer, hash)
     }
 

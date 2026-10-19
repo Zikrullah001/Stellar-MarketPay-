@@ -22,7 +22,7 @@ fn setup(env: &Env) -> (Address, MarketPayContractClient, Address, Address, Stri
     let treasury = Address::generate(env);
     let owner = Address::generate(env);
     client.initialize(&admin, &treasury, &String::from_str(&env, "1.0.0"));
-    let job_id = String::from_str(env, "sealed-bid-job-1");
+    let job_id = String::from_str(&env, "sealed-bid-job-1");
     client.commit_budget(&job_id, &1_000, &owner);
     (id, client, owner, admin, job_id)
 }

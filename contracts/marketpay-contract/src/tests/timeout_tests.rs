@@ -725,7 +725,6 @@ fn test_timeout_refund_after_complete_refund_and_recreate() {
     );
 }
 
-
 struct EscrowTestSetup<'a> {
     contract_id: Address,
     client: Address,
@@ -745,7 +744,7 @@ fn setup_escrow<'a>(
     let contract_client = MarketPayContractClient::new(env, &id);
     let admin = Address::generate(env);
     let treasury = Address::generate(env);
-    contract_client.initialize(&admin, &treasury, &String::from_str(env, "1.0.0"));
+    contract_client.initialize(&admin, &treasury, &String::from_str(&env, "1.0.0"));
 
     let client = Address::generate(env);
     let freelancer = Address::generate(env);
@@ -756,7 +755,7 @@ fn setup_escrow<'a>(
     let escrow_amount = 1000i128;
     token_admin.mint(&client, &10000);
 
-    let job_id = String::from_str(env, "job1");
+    let job_id = String::from_str(&env, "job1");
     contract_client.create_escrow(
         &job_id,
         &client,
@@ -808,9 +807,15 @@ fn test_resolve_timeout_locked_refunds_client() {
     let client_balance_after = setup.token_client.balance(&setup.client);
     let contract_balance_after = setup.token_client.balance(&setup.contract_id);
 
-    assert_eq!(client_balance_after, client_balance_before + setup.escrow_amount);
-    assert_eq!(contract_balance_after, contract_balance_before - setup.escrow_amount);
-    
+    assert_eq!(
+        client_balance_after,
+        client_balance_before + setup.escrow_amount
+    );
+    assert_eq!(
+        contract_balance_after,
+        contract_balance_before - setup.escrow_amount
+    );
+
     // Status should be Refunded
     let status = contract_client.get_status(&job_id);
     assert_eq!(status, EscrowStatus::Refunded);
@@ -850,8 +855,14 @@ fn test_resolve_timeout_inprogress_pays_freelancer() {
     let expected_fee = setup.escrow_amount * 100 / 10000;
     let expected_freelancer_amount = setup.escrow_amount - expected_fee;
 
-    assert_eq!(freelancer_balance_after, freelancer_balance_before + expected_freelancer_amount);
-    assert_eq!(treasury_balance_after, treasury_balance_before + expected_fee);
+    assert_eq!(
+        freelancer_balance_after,
+        freelancer_balance_before + expected_freelancer_amount
+    );
+    assert_eq!(
+        treasury_balance_after,
+        treasury_balance_before + expected_fee
+    );
 }
 
 #[test]
@@ -862,7 +873,7 @@ fn test_resolve_timeout_before_timeout_panics() {
     let setup = setup_escrow(&env, None, None, None);
     let job_id = String::from_str(&env, "job1");
     let contract_client = MarketPayContractClient::new(&env, &setup.contract_id);
-    
+
     // Call before timeout
     contract_client.resolve_timeout(&job_id);
 }

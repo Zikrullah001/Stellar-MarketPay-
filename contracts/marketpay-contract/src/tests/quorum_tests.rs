@@ -56,8 +56,8 @@ fn vote_and_resolve(
 fn plain_proposal(env: &Env, client: &MarketPayContractClient, proposer: &Address) -> u32 {
     client.create_proposal(
         proposer,
-        &String::from_str(env, "p"),
-        &String::from_str(env, "d"),
+        &String::from_str(&env, "p"),
+        &String::from_str(&env, "d"),
         &VOTING_LEDGERS,
     )
 }
@@ -68,7 +68,12 @@ fn quorum_proposal(
     proposer: &Address,
     bps: u32,
 ) -> u32 {
-    client.propose_quorum_change(proposer, &bps, &String::from_str(env, "d"), &VOTING_LEDGERS)
+    client.propose_quorum_change(
+        proposer,
+        &bps,
+        &String::from_str(&env, "d"),
+        &VOTING_LEDGERS,
+    )
 }
 
 fn apply_quorum_via_governance(

@@ -1,7 +1,95 @@
-use soroban_sdk::{symbol_short, token, Address, Env, String};
+use soroban_sdk::{symbol_short, token, Address, Env, String, Vec};
 
 use crate::helpers::check_not_frozen;
 use crate::types::*;
+
+const MAX_DISPUTES_PER_PAGE: u32 = 50;
+const DISPUTE_INDEX_TTL_THRESHOLD: u32 = 100;
+const DISPUTE_INDEX_TTL_EXTEND_TO: u32 = 6_312_000;
+
+fn record_dispute(env: &Env, job_id: &String) {
+    let count: u64 = env
+        .storage()
+        .instance()
+        .get(&DataKey::DisputeCount)
+        .unwrap_or(0);
+    let next_id = match count.checked_add(1) {
+        Some(next_id) => next_id,
+        None => panic!("Dispute index overflow"),
+    };
+    env.storage()
+        .instance()
+        .set(&DataKey::DisputeCount, &next_id);
+    let key = DataKey::DisputeJob(next_id);
+    env.storage().persistent().set(&key, job_id);
+    env.storage().persistent().extend_ttl(
+        &key,
+        DISPUTE_INDEX_TTL_THRESHOLD,
+        DISPUTE_INDEX_TTL_EXTEND_TO,
+    );
+}
+
+/// List a bounded page of disputes. The cursor is the last scanned dispute ID.
+pub(crate) fn get_all_disputes(env: Env, start_after: Option<u64>, limit: u32) -> DisputePage {
+    let admin: Address = match env.storage().instance().get(&DataKey::Admin) {
+        Some(admin) => admin,
+        None => panic!("Contract is not initialized"),
+    };
+    admin.require_auth();
+    if limit == 0 {
+        panic!("Dispute page limit must be greater than zero");
+    }
+
+    let total: u64 = env
+        .storage()
+        .instance()
+        .get(&DataKey::DisputeCount)
+        .unwrap_or(0);
+    let mut cursor = start_after.unwrap_or_default();
+    let page_end = cursor
+        .saturating_add(u64::from(limit.min(MAX_DISPUTES_PER_PAGE)))
+        .min(total);
+    let mut disputes = Vec::new(&env);
+
+    while cursor < page_end {
+        cursor = match cursor.checked_add(1) {
+            Some(cursor) => cursor,
+            None => panic!("Dispute cursor overflow"),
+        };
+        let job_id: Option<String> = env.storage().persistent().get(&DataKey::DisputeJob(cursor));
+        if let Some(job_id) = job_id {
+            let key = DataKey::DisputeJob(cursor);
+            env.storage().persistent().extend_ttl(
+                &key,
+                DISPUTE_INDEX_TTL_THRESHOLD,
+                DISPUTE_INDEX_TTL_EXTEND_TO,
+            );
+            let escrow: Option<Escrow> = env
+                .storage()
+                .instance()
+                .get(&DataKey::Escrow(job_id.clone()));
+            if let Some(escrow) = escrow {
+                let bond: Option<DisputeBond> = env
+                    .storage()
+                    .instance()
+                    .get(&DataKey::DisputeBond(job_id.clone()));
+                disputes.push_back(DisputeSummary {
+                    job_id,
+                    status: escrow.status,
+                    client: escrow.client,
+                    freelancer: escrow.freelancer,
+                    bond: bond.map(|bond| bond.amount),
+                });
+            }
+        }
+    }
+
+    let next_cursor = if cursor < total { Some(cursor) } else { None };
+    DisputePage {
+        disputes,
+        next_cursor,
+    }
+}
 
 /// Raise a dispute — requires admin resolution.
 ///
@@ -86,6 +174,7 @@ pub(crate) fn raise_dispute(env: Env, job_id: String, caller: Address) {
                 caller.clone(),
             ),
         );
+        record_dispute(&env, &job_id);
         return;
     }
 
@@ -94,6 +183,7 @@ pub(crate) fn raise_dispute(env: Env, job_id: String, caller: Address) {
     env.storage()
         .instance()
         .set(&DataKey::Escrow(job_id.clone()), &escrow);
+    record_dispute(&env, &job_id);
 
     env.events().publish(
         (symbol_short!("escrow_ds"), job_id.clone()),

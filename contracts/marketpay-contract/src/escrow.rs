@@ -879,10 +879,10 @@ pub(crate) fn resolve_timeout(env: Env, job_id: String) {
                     escrow.amount,
                 ),
             );
-        },
+        }
         EscrowStatus::InProgress => {
             crate::escrow::release_escrow_core(env, job_id, escrow);
-        },
+        }
         _ => panic!("Cannot resolve timeout in current status"),
     }
 }

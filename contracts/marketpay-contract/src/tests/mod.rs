@@ -2,6 +2,7 @@ mod basic_tests;
 mod certificates_tests;
 mod deliverable_hash_tests;
 mod deliverable_oracle_tests;
+mod dispute_admin_tests;
 mod extension_tests;
 mod freeze_escrow_tests;
 mod message_tests;

@@ -7,7 +7,7 @@ fn setup(env: &Env) -> (MarketPayContractClient, Address, Address, Address, Addr
     let contract = MarketPayContractClient::new(env, &id);
     let admin = Address::generate(env);
     let treasury = Address::generate(env);
-    contract.initialize(&admin, &treasury, &String::from_str(env, "1.0.0"));
+    contract.initialize(&admin, &treasury, &String::from_str(&env, "1.0.0"));
 
     let client = Address::generate(env);
     let freelancer = Address::generate(env);
@@ -27,7 +27,7 @@ fn create_escrow(
     token_id: &Address,
     job: &str,
 ) -> String {
-    let job_id = String::from_str(env, job);
+    let job_id = String::from_str(&env, job);
     contract.create_escrow(
         &job_id,
         client,
